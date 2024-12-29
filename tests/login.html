@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會員登入</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+        }
+        header h1 {
+            margin: 0;
+        }
+        .header-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        header button {
+            background-color: #555;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        header button:hover {
+            background-color: #777;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+            text-align: center;
+        }
+        .form-box {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .form-box input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .form-box button {
+            width: 100%;
+            padding: 10px 15px;
+            border: none;
+            background-color: #333;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form-box button:hover {
+            background-color: #555;
+        }
+        .message {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .message.success {
+            color: green;
+        }
+        .message.error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>書香書店</h1>
+        <div class="header-buttons">
+            <button onclick="location.href='index.php'">回首頁</button>
+            <button onclick="location.href='register.html'">註冊會員</button>
+        </div>
+    </header>
+    <div class="container">
+        <div class="form-box">
+            <h2>會員登入</h2>
+            <form id="loginForm">
+                <input type="text" id="username" placeholder="帳號" required>
+                <input type="password" id="password" placeholder="密碼" required>
+                <button type="submit">登入</button>
+            </form>
+            <div id="message" class="message"></div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+        
+            const loginData = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
+        
+            fetch('login.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(loginData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const messageDiv = document.getElementById('message');
+                if (data.success) {
+                    alert('Login successful!');
+                    window.location.href = 'admin_page.php';
+                } else {
+                    messageDiv.textContent = data.error;
+                    messageDiv.className = 'message error';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const messageDiv = document.getElementById('message');
+                messageDiv.textContent = '網路錯誤，請稍後再試。';
+                messageDiv.className = 'message error';
+            });
+        });
+        
+    </script>
+</body>
+</html>
