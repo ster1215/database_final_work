@@ -1,53 +1,75 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);  // Enable error reporting for debugging
 include 'connMysql.php';
 
-header('Content-Type: application/json'); // Set content type to JSON
+// 確保表單數據是 POST 請求
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // 檢查是否有所有必要的欄位
+    if (isset($_POST['title'], $_POST['price'], $_POST['quantity'])) {
 
-// Ensure the request method is POST
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Validate the input fields from $_POST and $_FILES
-    if (!isset($_POST['title']) || !isset($_POST['author']) || !isset($_POST['price']) || !isset($_POST['quantity'])) {
-        echo json_encode(["error" => "Missing required fields"]);
-        exit;
-    }
+        // 取得表單資料
+        $title = $_POST['title'];
+        $author = !empty($_POST['author']) ? $_POST['author'] : 'unknown'; // 如果作者為空，設定為 "unknown"
+        $year = !empty($_POST['year']) ? $_POST['year'] : 'unknown'; // 如果年份為空，設定為 "unknown"
+        $price = $_POST['price'];
+        $quantity = $_POST['quantity'];
 
-    $title = $_POST['title'];
-    $author = $_POST['author'];
-    $year = isset($_POST['year']) ? $_POST['year'] : null;
-    $price = $_POST['price'];
-    $quantity = $_POST['quantity'];
-    
-    // Handle image upload
-    $image = null;
-    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-        $imageTmpPath = $_FILES['image']['tmp_name'];
-        $imageName = time() . '_' . $_FILES['image']['name'];
-        $imagePath = 'uploads/' . $imageName;
+        // 預設圖片為 default.jpg
+        $imagePath = 'uploads/08.png';
 
-        if (move_uploaded_file($imageTmpPath, $imagePath)) {
-            $image = $imagePath; // Store the relative path of the image
-        } else {
-            echo json_encode(["error" => "Image upload failed"]);
-            exit;
+        // 處理圖片上傳
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $image = $_FILES['image'];
+            $imageName = $image['name'];
+            $imageTmpName = $image['tmp_name'];
+            $imageSize = $image['size'];
+
+            // 設定圖片儲存路徑
+            $uploadDir = 'uploads/';
+            $imagePath = $uploadDir . basename($imageName);
+
+            // 檢查圖片檔案類型和大小
+            $imageExt = strtolower(pathinfo($imageName, PATHINFO_EXTENSION));
+            $allowedExts = ['jpg', 'jpeg', 'png', 'gif'];
+
+            if (in_array($imageExt, $allowedExts) && $imageSize <= 5 * 1024 * 1024) {
+                // 移動檔案到上傳資料夾
+                if (!move_uploaded_file($imageTmpName, $imagePath)) {
+                    echo json_encode(['success' => false, 'error' => '圖片上傳失敗。']);
+                    exit;
+                }
+            } else {
+                echo json_encode(['success' => false, 'error' => '圖片格式不正確或檔案太大。']);
+                exit;
+            }
         }
-    }
 
-    // Insert the book into the database
-    $sql = "INSERT INTO books (title, author, year, price, quantity, image) VALUES (?, ?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssdis", $title, $author, $year, $price, $quantity, $image);
+        // 新增書籍到資料庫
+        $sql = "INSERT INTO books (title, author, year, price, quantity, image) VALUES (?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssssds", $title, $author, $year, $price, $quantity, $imagePath);
 
-    if ($stmt->execute()) {
-        echo json_encode(["success" => "Book added successfully"]);
+        if ($stmt->execute()) {
+            // 取得剛新增的書籍資料
+            $bookId = $stmt->insert_id;
+            $response = [
+                'success' => true,
+                'book' => [
+                    'id' => $bookId,
+                    'title' => $title,
+                    'author' => $author,
+                    'price' => $price,
+                    'image' => $imagePath, // 如果沒有上傳圖片，會自動設為 default.jpg
+                ]
+            ];
+            echo json_encode($response);
+        } else {
+            echo json_encode(['success' => false, 'error' => '新增書籍資料時發生錯誤。']);
+        }
     } else {
-        echo json_encode(["error" => "Failed to add book"]);
+        echo json_encode(['success' => false, 'error' => '缺少必要的表單資料。']);
     }
-
-    $stmt->close();
-    $conn->close();
-} else {
-    echo json_encode(["error" => "Invalid request method"]);
 }
+
+// 關閉資料庫連接
+$conn->close();
 ?>

@@ -59,25 +59,22 @@ $result = $conn->query($sql);
             margin: 20px;
         }
         .search-box {
-            width: 100%;
-            max-width: 400px;
-            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
         }
-        .search-box input[type="text"] {
-            width: 100%;
+        .search-box input {
+            width: 300px;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
         }
         .search-box button {
-            margin-top: 10px;
             padding: 10px 20px;
-            border: none;
             background-color: #333;
             color: white;
+            border: none;
             border-radius: 5px;
             cursor: pointer;
-            width: 100%;
         }
         .search-box button:hover {
             background-color: #555;
@@ -116,6 +113,12 @@ $result = $conn->query($sql);
 
 <header>
     <h1>書香書店</h1>
+    <div class="search-box">
+            <form method="GET" action="">
+                <input type="text" name="search" placeholder="輸入書籍名稱或作者" value="<?php echo htmlspecialchars($searchQuery); ?>">
+                <button type="submit">搜尋</button>
+            </form>
+    </div>
     <div class="header-buttons">
         <!-- <button onclick="location.href='cart.php'">購物車</button> -->
         <button onclick="location.href='login.html'">登入會員</button>
@@ -123,13 +126,7 @@ $result = $conn->query($sql);
     </div>
 </header>
 
-<div class="container">
-    <div class="search-box">
-        <form method="GET" action="">
-            <input type="text" name="search" placeholder="輸入書籍名稱" value="<?php echo htmlspecialchars($searchQuery); ?>">
-            <button type="submit">搜尋</button>
-        </form>
-    </div>
+
 
     <div class="book-list">
         <?php if ($result->num_rows > 0): ?>

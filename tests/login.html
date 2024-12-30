@@ -121,8 +121,12 @@
             .then(data => {
                 const messageDiv = document.getElementById('message');
                 if (data.success) {
-                    alert('Login successful!');
-                    window.location.href = 'admin_page.php';
+                    messageDiv.textContent = data.success;
+                    messageDiv.className = 'message success';
+                    alert(data.role);
+                    // 根據角色跳轉到對應頁面
+                    window.location.href = data.role+'_page.php'; // 登入成功後跳轉到 admin 頁面
+
                 } else {
                     messageDiv.textContent = data.error;
                     messageDiv.className = 'message error';
@@ -135,7 +139,6 @@
                 messageDiv.className = 'message error';
             });
         });
-        
     </script>
 </body>
 </html>
