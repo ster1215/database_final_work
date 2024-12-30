@@ -1,5 +1,5 @@
 <?php
-session_start(); // 確保 session 正常啟用
+session_start();
 include 'connMysql.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -21,10 +21,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 設置 session 變量
             $_SESSION['member_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
-
-            // 回傳成功訊息
-            echo json_encode(["success" => "Login successful"]);
             
+            // 假設 role 欄位為 'admin' 或 'user'
+            $role = $user['role']; 
+
+            // 回傳成功訊息和角色
+            echo json_encode([
+                "success" => "Login successful",
+                "role" => $role // 返回角色資訊
+            ]);
         } else {
             echo json_encode(["error" => "Invalid password"]);
         }
@@ -35,4 +40,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->close();
     $conn->close();
 }
+
 ?>

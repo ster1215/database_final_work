@@ -7,7 +7,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $data['email'];
     $password = password_hash($data['password'], PASSWORD_DEFAULT);
 
-    // Check if username or email already exists
+    // 設定預設角色為 'user'
+    $role = 'user';
+
+    // 檢查用戶名或電子郵件是否已存在
     $sql = "SELECT * FROM members WHERE username = ? OR email = ?";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ss", $username, $email);
@@ -16,10 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($result->num_rows > 0) {
         echo json_encode(["error" => "Username or email already taken"]);
     } else {
-        // Insert new member
-        $sql = "INSERT INTO members (username, email, password) VALUES (?, ?, ?)";
+        // 插入新會員，將role設為 'user'
+        $sql = "INSERT INTO members (username, email, password, role) VALUES (?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sss", $username, $email, $password);
+        $stmt->bind_param("ssss", $username, $email, $password, $role);
         if ($stmt->execute()) {
             echo json_encode(["success" => "Member registered successfully"]);
         } else {
