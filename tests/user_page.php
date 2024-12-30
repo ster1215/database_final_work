@@ -4,6 +4,9 @@ include 'connMysql.php';
 // 啟動會話以存取使用者登入狀態和購物車
 session_start();
 
+$searchQuery = isset($_GET['search']) ? $_GET['search'] : '';
+
+
 // 檢查用戶是否已經登入，若未登入則跳轉到登入頁面
 if (!isset($_SESSION['member_id'])) {
     header("Location: login.html");
@@ -12,17 +15,15 @@ if (!isset($_SESSION['member_id'])) {
 
 // 處理加入購物車
 if (isset($_GET['add_to_cart'])) {
-    $bookId = $_GET['add_to_cart'];
+    $bookId = intval($_GET['add_to_cart']); // 確保是整數
     if (!isset($_SESSION['cart'])) {
         $_SESSION['cart'] = array();
     }
-    
+
     // 檢查書籍是否已經在購物車中
     if (array_key_exists($bookId, $_SESSION['cart'])) {
-        // 如果書籍已在購物車中，則增加數量
         $_SESSION['cart'][$bookId]++;
     } else {
-        // 如果書籍不在購物車中，則新增該書並設為數量1
         $_SESSION['cart'][$bookId] = 1;
     }
 }
@@ -34,7 +35,7 @@ if (isset($_GET['logout'])) {
 }
 
 // 查詢所有書籍資料
-$sql = "SELECT * FROM books";
+$sql = "SELECT * FROM books WHERE title LIKE '%$searchQuery%' OR author LIKE '%$searchQuery%'";
 $result = $conn->query($sql);
 
 // 查詢用戶資料
@@ -85,6 +86,27 @@ $user = $user_result->fetch_assoc();
         header button:hover {
             background-color: #777;
         }
+        .search-box {
+            display: flex;
+            align-items: center;
+        }
+        .search-box input {
+            width: 300px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .search-box button {
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .search-box button:hover {
+            background-color: #555;
+        }
         .cart-icon {
             position: relative;
             cursor: pointer;
@@ -126,7 +148,7 @@ $user = $user_result->fetch_assoc();
             border-bottom: 1px solid #ddd;
             display: flex;
             align-items: center;
-            background-color: #333;
+            background-color:#ddd
         }
 
         .cart-dropdown li img {
@@ -202,7 +224,7 @@ $user = $user_result->fetch_assoc();
             background-color: #fff;
             border-radius: 10px;
             border: 1px solid #ddd;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 8px rgb(254, 254, 254);
             max-width: 800px;
             margin-top: 20px;
             width: 100%;
@@ -251,6 +273,12 @@ $user = $user_result->fetch_assoc();
 
 <header>
     <h1>書香書店</h1>
+    <div class="search-box">
+            <form method="GET" action="">
+                <input type="text" name="search" placeholder="輸入書籍名稱或作者" value="<?php echo htmlspecialchars($searchQuery); ?>">
+                <button type="submit">搜尋</button>
+            </form>
+    </div>
     <div class="header-buttons">
         <div class="cart-icon">
             <i class="fas fa-shopping-cart"></i>
@@ -259,19 +287,25 @@ $user = $user_result->fetch_assoc();
                 <ul>
                     <?php
                     if (isset($_SESSION['cart']) && count($_SESSION['cart']) > 0) {
+                        // 這裡遍歷購物車中的每個書籍 ID 並取得書籍詳細資訊
                         $cart = array_count_values($_SESSION['cart']);
-                        foreach ($cart as $bookId => $quantity) {
+                        foreach ($_SESSION['cart'] as $bookId => $quantity) {
+                            // 查詢該書籍的詳細資訊
                             $sql_book = "SELECT * FROM books WHERE id = $bookId";
                             $book_result = $conn->query($sql_book);
-                            $book = $book_result->fetch_assoc();
-                            echo '<div class="cart-item">';
-                            echo '<img src="' . $book['image'] . '" alt="' . $book['title'] . '">';
-                            echo '<div class="cart-item-info">';
-                            echo '<p class="book-title">' . $book['title'] . '</p>';
-                            echo '<p class="book-price">價格: $' . $book['price'] . '</p>';
-                            echo '<p class="book-quantity">數量: ' . $quantity . '</p>';
-                            echo '</div>';
-                            echo '</div>';
+                            
+                            // 確保資料庫查詢成功
+                            if ($book_result && $book_result->num_rows > 0) {
+                                $book = $book_result->fetch_assoc();
+                                echo '<li class="cart-item">';
+                                echo '<img src="' . $book['image'] . '" alt="' . $book['title'] . '">';
+                                echo '<div class="cart-item-info">';
+                                echo '<p class="book-title">' . $book['title'] . '</p>';
+                                echo '<p class="book-price">價格: $' . $book['price'] . '</p>';
+                                echo '<p class="book-quantity">數量: ' . $quantity . '</p>';
+                                echo '</div>';
+                                echo '</li>';
+                            }
                         }
                     } else {
                         echo '<p>您的購物車是空的。</p>';

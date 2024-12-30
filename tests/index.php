@@ -118,7 +118,7 @@ $result = $conn->query($sql);
                 <input type="text" name="search" placeholder="輸入書籍名稱或作者" value="<?php echo htmlspecialchars($searchQuery); ?>">
                 <button type="submit">搜尋</button>
             </form>
-        </div>
+    </div>
     <div class="header-buttons">
         <!-- <button onclick="location.href='cart.php'">購物車</button> -->
         <button onclick="location.href='login.html'">登入會員</button>
